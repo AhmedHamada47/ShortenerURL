@@ -1,0 +1,44 @@
+[
+  {
+    "ContainingType": "ShortnerUrl.Controllers.RedirectController",
+    "Method": "RedirectToLongUrl",
+    "RelativePath": "{code}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ShortnerUrl.Controllers.UrlController",
+    "Method": "ListUrls",
+    "RelativePath": "API/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ShortnerUrl.Controllers.UrlController",
+    "Method": "Shorten",
+    "RelativePath": "API/shorten",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Url",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

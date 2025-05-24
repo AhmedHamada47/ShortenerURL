@@ -1,0 +1,78 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|c:\\users\\ahmed\\source\\repos\\shortnerurl\\shortnerurl\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|solutionrelative:shortnerurl\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|c:\\users\\ahmed\\source\\repos\\shortnerurl\\shortnerurl\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|solutionrelative:shortnerurl\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|c:\\users\\ahmed\\source\\repos\\shortnerurl\\shortnerurl\\models\\urlshrotner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{98626766-61C5-40DC-8E4E-47CBFC776284}|ShortnerUrl\\ShortnerUrl.csproj|solutionrelative:shortnerurl\\models\\urlshrotner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\wwwroot\\index.html",
+              "RelativeDocumentMoniker": "ShortnerUrl\\wwwroot\\index.html",
+              "ToolTip": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\wwwroot\\index.html",
+              "RelativeToolTip": "ShortnerUrl\\wwwroot\\index.html",
+              "ViewState": "AgIAACEBAAAAAAAAAAAwwEQBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2025-05-24T13:29:44.033Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "ShortnerUrl\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\Properties\\launchSettings.json",
+              "RelativeToolTip": "ShortnerUrl\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABAAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-01T10:20:21.498Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UrlShrotner.cs",
+              "DocumentMoniker": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\Models\\UrlShrotner.cs",
+              "RelativeDocumentMoniker": "ShortnerUrl\\Models\\UrlShrotner.cs",
+              "ToolTip": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\Models\\UrlShrotner.cs",
+              "RelativeToolTip": "ShortnerUrl\\Models\\UrlShrotner.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-30T17:23:23.457Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

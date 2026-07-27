@@ -10,7 +10,8 @@ namespace ShortnerUrl.Middleware
 
         private static readonly HashSet<string> PublicPaths = new(StringComparer.OrdinalIgnoreCase)
         {
-            "/api/health"
+            "/api/health",
+            "/api/keys/create"
         };
 
         public ApiKeyAuthMiddleware(RequestDelegate next)

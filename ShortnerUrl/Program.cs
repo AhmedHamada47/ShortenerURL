@@ -69,6 +69,25 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var existingDevKey = db.ApiKeys.FirstOrDefault(k => k.WorkspaceName == "Development");
+    if (existingDevKey == null)
+    {
+        var devKey = $"usp_dev_{Guid.NewGuid():N}";
+        db.ApiKeys.Add(new ShortnerUrl.Models.ApiKey
+        {
+            KeyHash = UrlShortenerService.HashKey(devKey),
+            WorkspaceName = "Development",
+            IsActive = true
+        });
+        db.SaveChanges();
+        logger.LogWarning("========== Development API key: {Key} ==========", devKey);
+    }
+    else
+    {
+        logger.LogWarning("========== Dev API key already exists. Create a new one: POST /api/keys/create ==========");
+    }
 }
 
 app.Run();

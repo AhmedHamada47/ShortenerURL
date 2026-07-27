@@ -2,9 +2,10 @@ const API_BASE = '/api';
 const THEME_COOKIE = 'theme';
 let state = { links: [], currentStats: null };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initEventListeners();
+  await ensureApiKey();
   loadLinks();
 });
 
@@ -33,6 +34,28 @@ function setCookie(name, value, days) {
   const d = new Date();
   d.setTime(d.getTime() + days * 864e5);
   document.cookie = `${name}=${value};path=/;expires=${d.toUTCString()};SameSite=Lax`;
+}
+
+async function ensureApiKey() {
+  let key = getCookie('apiKey');
+  if (key) return key;
+  try {
+    const res = await fetch(`${API_BASE}/keys/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceName: 'Default' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      key = data.plainTextKey;
+      setCookie('apiKey', key, 365);
+    }
+  } catch {}
+  return key;
+}
+
+function apiKey() {
+  return getCookie('apiKey') || '';
 }
 
 function initEventListeners() {
@@ -75,7 +98,7 @@ async function shortenUrl() {
 
     const res = await fetch(`${API_BASE}/shorten`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Api-Key': getCookie('apiKey') || '' },
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey() || '' },
       body: JSON.stringify(body)
     });
 
@@ -165,7 +188,7 @@ async function loadLinks() {
 
   try {
     const res = await fetch(`${API_BASE}/list`, {
-      headers: { 'X-Api-Key': getCookie('apiKey') || '' }
+      headers: { 'X-Api-Key': apiKey() || '' }
     });
     if (!res.ok) { wrap.innerHTML = ''; empty.style.display = 'flex'; return; }
 
@@ -239,7 +262,7 @@ async function showStats(code) {
 
   try {
     const res = await fetch(`${API_BASE}/urls/${encodeURIComponent(code)}/stats`, {
-      headers: { 'X-Api-Key': getCookie('apiKey') || '' }
+      headers: { 'X-Api-Key': apiKey() || '' }
     });
     if (!res.ok) { body.innerHTML = '<p class="empty-state">Failed to load stats.</p>'; return; }
 
@@ -324,7 +347,7 @@ async function deleteLink(code) {
   try {
     const res = await fetch(`${API_BASE}/${encodeURIComponent(code)}`, {
       method: 'DELETE',
-      headers: { 'X-Api-Key': getCookie('apiKey') || '' }
+      headers: { 'X-Api-Key': apiKey() || '' }
     });
     if (!res.ok) throw new Error('Delete failed');
     showToast('Link deleted.', 'success');

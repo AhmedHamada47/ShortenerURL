@@ -1,341 +1,87 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>URL Shortener</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(to right, #667eea, #764ba2);
-            padding: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #fff;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        h2 {
-            font-size: 28px;
-            margin-bottom: 20px;
-            color: #fefefe;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            border: none;
-            font-size: 16px;
-            outline: none;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-        }
-
-        .button-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        button {
-            padding: 12px 20px;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            min-width: 120px;
-        }
-
-            button:hover {
-                transform: scale(1.05);
-                box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            }
-
-            button:disabled {
-                background: #999;
-                cursor: not-allowed;
-                transform: none;
-                box-shadow: none;
-            }
-
-        #shortenBtn {
-            background: linear-gradient(45deg, #ff6b6b, #f06595);
-        }
-
-            #shortenBtn:hover {
-                background: linear-gradient(45deg, #f06595, #ff6b6b);
-                box-shadow: 0 0 10px #ff6b6b;
-            }
-
-        #resetBtn {
-            background: linear-gradient(45deg, #4dabf7, #3b5bdb);
-        }
-
-            #resetBtn:hover {
-                background: linear-gradient(45deg, #3b5bdb, #4dabf7);
-                box-shadow: 0 0 10px #4dabf7;
-            }
-
-        #copyBtn {
-            background: linear-gradient(45deg, #20c997, #0ca678);
-        }
-
-            #copyBtn:hover {
-                background: linear-gradient(45deg, #0ca678, #20c997);
-                box-shadow: 0 0 10px #20c997;
-            }
-
-        #result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #fff;
-        }
-
-        .history-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-            .history-item a {
-                color: #ffd43b;
-                text-decoration: none;
-                font-weight: bold;
-                word-break: break-all;
-            }
-
-                .history-item a:hover {
-                    text-decoration: underline;
-                    color: #ffe066;
-                }
-
-        .status-message {
-            padding: 8px;
-            margin-top: 15px;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .success {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #a0fab8;
-        }
-
-        .error {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #ffc9c9;
-        }
-
-        #history-section {
-            margin-top: 30px;
-            display: none;
-        }
-
-            #history-section h3 {
-                margin-bottom: 15px;
-                color: #fefefe;
-            }
-
-        #history-list {
-            max-height: 200px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-    <div class="container">
-        <h2>✨ Stylish URL Shortener</h2>
-        <input type="text" id="urlInput" placeholder="Paste your long URL here..." />
-        <div class="button-row">
-            <button id="shortenBtn" onclick="shortenUrl()">Shorten</button>
-            <button id="resetBtn" onclick="resetForm()">New URL</button>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon"><i class="fas fa-link"></i></div>
+        <div>
+          <h1>Shortener Pro</h1>
+          <span>Secure link management</span>
         </div>
-        <div class="button-row">
-            <button id="copyBtn" onclick="copyToClipboard()">Copy URL</button>
-        </div>
-        <p id="statusMessage" class="status-message"></p>
-        <p id="result"></p>
+      </div>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
+      </div>
+    </header>
 
-        <div id="history-section">
-            <h3>Recently Shortened</h3>
-            <div id="history-list"></div>
+    <div class="card">
+      <div class="input-group">
+        <label for="urlInput">Destination URL</label>
+        <input type="url" id="urlInput" placeholder="https://example.com/your-very-long-url" autofocus />
+        <div class="validation-feedback" id="urlFeedback"></div>
+      </div>
+
+      <button class="advanced-toggle" id="advancedToggle" type="button">
+        <i class="fas fa-chevron-right icon"></i> Advanced options
+      </button>
+      <div class="advanced-content" id="advancedContent">
+        <div class="input-group">
+          <label for="aliasInput">Custom alias (optional)</label>
+          <input type="text" id="aliasInput" placeholder="my-custom-link" maxlength="30" />
+          <div class="validation-feedback" id="aliasFeedback"></div>
         </div>
+        <div class="input-group">
+          <label for="expiresInput">Expires at (optional)</label>
+          <input type="datetime-local" id="expiresInput" />
+        </div>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-label">Your shortened URL</div>
+        <a class="result-url" id="resultUrl" href="#" target="_blank"></a>
+        <div class="result-actions">
+          <button class="btn btn-sm btn-primary" id="copyResultBtn"><i class="fas fa-copy"></i> Copy</button>
+          <button class="btn btn-sm btn-secondary" id="qrResultBtn"><i class="fas fa-qrcode"></i> QR</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="shortenBtn"><i class="fas fa-bolt"></i> Shorten URL</button>
     </div>
-    <script>
-        // Store original and shortened URLs
-        let originalUrl = "";
-        let shortUrl = "";
-        let urlHistory = [];
 
-        // Initialize the form
-        window.onload = function () {
-            resetForm();
-        };
+    <div class="card">
+      <h3 style="margin-bottom:16px"><i class="fas fa-list"></i> Your Links</h3>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <i class="fas fa-link"></i>
+        <p>No links yet. Shorten your first URL above!</p>
+      </div>
+      <div id="linksWrap"></div>
+    </div>
 
-        async function shortenUrl() {
-            const input = document.getElementById('urlInput');
-            const longUrl = input.value.trim();
-            const result = document.getElementById('result');
-            const shortenBtn = document.getElementById('shortenBtn');
-            const statusMessage = document.getElementById('statusMessage');
+    <footer style="text-align:center;padding:24px 0 12px;color:var(--c-text-2);font-size:0.8rem">
+      URL Shortener Pro &mdash; Built with ASP.NET Core &amp; EF Core
+    </footer>
+  </div>
 
-            if (!longUrl) {
-                showStatus("Please enter a valid URL.", "error");
-                return;
-            }
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" id="modalClose" aria-label="Close modal"><i class="fas fa-times"></i></button>
+      <h3 id="modalTitle"></h3>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
 
-            // Check if it looks like a URL (basic validation)
-            if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
-                showStatus("Please enter a valid URL starting with http:// or https://", "error");
-                return;
-            }
-
-            originalUrl = longUrl;
-            shortenBtn.disabled = true;
-            result.innerHTML = "🔄 Shortening...";
-            statusMessage.style.display = "none";
-
-            try {
-                const response = await fetch('/api/shorten', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(longUrl)
-                });
-
-                if (!response.ok) throw new Error("Request failed");
-
-                shortUrl = await response.text();
-
-                // Update the input field with the shortened URL
-                input.value = shortUrl;
-
-                // Show the success message
-                result.innerHTML = `Done!`;
-                showStatus("URL shortened successfully!", "success");
-
-                // Add to history, remove previous one
-                addToHistory(originalUrl, shortUrl);
-
-                shortenBtn.disabled = false;
-
-            } catch (error) {
-                showStatus("❌ Error shortening URL. Try again later.", "error");
-                result.innerHTML = "";
-                shortenBtn.disabled = false;
-            }
-        }
-
-        function resetForm() {
-            const input = document.getElementById('urlInput');
-            const result = document.getElementById('result');
-            const shortenBtn = document.getElementById('shortenBtn');
-            const statusMessage = document.getElementById('statusMessage');
-
-            // Clear the input and reset to original state
-            input.value = "";
-            result.innerHTML = "";
-            shortenBtn.disabled = false;
-            statusMessage.style.display = "none";
-
-            originalUrl = "";
-            shortUrl = "";
-
-            // Focus on the input field
-            input.focus();
-        }
-
-        function copyToClipboard() {
-            const input = document.getElementById('urlInput');
-
-            // If the input is empty, show error
-            if (!input.value.trim()) {
-                showStatus("No URL to copy.", "error");
-                return;
-            }
-
-            input.select();
-            input.setSelectionRange(0, 99999); // For mobile devices
-
-            navigator.clipboard.writeText(input.value)
-                .then(() => {
-                    showStatus("URL copied to clipboard!", "success");
-                })
-                .catch(err => {
-                    showStatus("Failed to copy URL.", "error");
-                    console.error('Could not copy text: ', err);
-                });
-        }
-
-        function addToHistory(originalUrl, shortUrl) {
-            // Clear history and add the new URL only
-            urlHistory = [{ original: originalUrl, short: shortUrl }];
-            updateHistoryDisplay();
-        }
-
-        function updateHistoryDisplay() {
-            const historySection = document.getElementById('history-section');
-            const historyList = document.getElementById('history-list');
-
-            // Only show history section if we have items
-            if (urlHistory.length > 0) {
-                historySection.style.display = 'block';
-
-                // Clear current list
-                historyList.innerHTML = '';
-
-                // Add the most recent history item
-                const item = urlHistory[0];
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-
-                const originalUrlShort = item.original.length > 30 ?
-                    item.original.substring(0, 30) + '...' :
-                    item.original;
-
-                historyItem.innerHTML = `
-                        <span title="${item.original}">${originalUrlShort}</span>
-                        <a href="${item.short}" target="_blank">${item.short}</a>
-                      `;
-
-                historyList.appendChild(historyItem);
-            } else {
-                historySection.style.display = 'none';
-            }
-        }
-
-        function showStatus(message, type) {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = message;
-            statusMessage.className = "status-message " + type;
-            statusMessage.style.display = "block";
-
-            // Auto-hide the message after 3 seconds
-            setTimeout(() => {
-                statusMessage.style.display = "none";
-            }, 3000);
-        }
-    </script>
+  <script src="/js/app.js"></script>
 </body>
 </html>

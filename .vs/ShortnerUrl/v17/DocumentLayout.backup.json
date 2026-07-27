@@ -38,9 +38,9 @@
               "Title": "index.html",
               "DocumentMoniker": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\wwwroot\\index.html",
               "RelativeDocumentMoniker": "ShortnerUrl\\wwwroot\\index.html",
-              "ToolTip": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\wwwroot\\index.html",
-              "RelativeToolTip": "ShortnerUrl\\wwwroot\\index.html",
-              "ViewState": "AgIAACEBAAAAAAAAAAAwwEQBAAAAAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Ahmed\\source\\repos\\ShortnerUrl\\ShortnerUrl\\wwwroot\\index.html*",
+              "RelativeToolTip": "ShortnerUrl\\wwwroot\\index.html*",
+              "ViewState": "AgIAAI0BAAAAAAAAAAAwwLABAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
               "WhenOpened": "2025-05-24T13:29:44.033Z",
               "EditorCaption": ""
@@ -55,8 +55,7 @@
               "RelativeToolTip": "ShortnerUrl\\Properties\\launchSettings.json",
               "ViewState": "AgIAAAkAAAAAAAAAAAAAABAAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-05-01T10:20:21.498Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-01T10:20:21.498Z"
             },
             {
               "$type": "Document",

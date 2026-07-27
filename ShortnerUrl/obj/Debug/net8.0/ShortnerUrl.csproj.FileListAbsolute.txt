@@ -66,12 +66,6 @@ C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\scopedcss\b
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets\msbuild.ShortnerUrl.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets\msbuild.ShortnerUrl.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets\msbuild.build.ShortnerUrl.props
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.ShortnerUrl.props
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.ShortnerUrl.props
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\Shortner.03884EEA.Up2Date
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\ShortnerUrl.dll
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\refint\ShortnerUrl.dll
@@ -160,5 +154,11 @@ C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\bin\Debug\net8.0\ru\Microsof
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\bin\Debug\net8.0\ShortnerUrl.staticwebassets.runtime.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\ShortnerUrl.sourcelink.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\Ahmed\source\repos\ShortnerUrl\ShortnerUrl\obj\Debug\net8.0\swae.build.ex.cache

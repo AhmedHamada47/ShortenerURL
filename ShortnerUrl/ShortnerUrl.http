@@ -1,6 +1,65 @@
 @ShortnerUrl_HostAddress = http://localhost:5122
+@ApiKey = usp_dev_ReplaceWithLoggedKey
 
-GET {{ShortnerUrl_HostAddress}}/weatherforecast/
+### Health check (public)
+GET {{ShortnerUrl_HostAddress}}/api/health
 Accept: application/json
 
-###
+### Create an API key (public)
+POST {{ShortnerUrl_HostAddress}}/api/keys/create
+Content-Type: application/json
+
+{
+  "workspaceName": "Default"
+}
+
+### Shorten a URL
+POST {{ShortnerUrl_HostAddress}}/api/shorten
+Content-Type: application/json
+X-Api-Key: {{ApiKey}}
+
+{
+  "url": "https://example.com/your-very-long-url"
+}
+
+### Shorten with custom alias + expiry
+POST {{ShortnerUrl_HostAddress}}/api/shorten
+Content-Type: application/json
+X-Api-Key: {{ApiKey}}
+
+{
+  "url": "https://example.com/alias-target",
+  "customAlias": "my-custom-link",
+  "expiresAt": "2027-01-01T00:00:00Z"
+}
+
+### Bulk shorten
+POST {{ShortnerUrl_HostAddress}}/api/shorten/bulk
+Content-Type: application/json
+X-Api-Key: {{ApiKey}}
+
+{
+  "items": [
+    { "url": "https://example.com/bulk-1" },
+    { "url": "https://example.com/bulk-2", "customAlias": "bulk-two" }
+  ]
+}
+
+### List all links
+GET {{ShortnerUrl_HostAddress}}/api/list
+X-Api-Key: {{ApiKey}}
+
+### Get stats
+GET {{ShortnerUrl_HostAddress}}/api/urls/{code}/stats
+X-Api-Key: {{ApiKey}}
+
+### Get QR code (PNG)
+GET {{ShortnerUrl_HostAddress}}/api/urls/{code}/qr
+X-Api-Key: {{ApiKey}}
+
+### Delete a link
+DELETE {{ShortnerUrl_HostAddress}}/api/{code}
+X-Api-Key: {{ApiKey}}
+
+### Follow a short link (public redirect)
+GET {{ShortnerUrl_HostAddress}}/{code}

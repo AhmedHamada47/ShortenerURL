@@ -29,7 +29,7 @@ namespace ShortnerUrl.Middleware
             var isStatic = path.StartsWith("/css") || path.StartsWith("/js") || path == "/" || string.IsNullOrEmpty(path) || path == "/index.html";
             var isPublicApi = path.StartsWith("/api/health");
 
-            if (isRedirect || isSwagger || isStatic || isPublicApi)
+            if (isRedirect || isSwagger || isStatic || isPublicApi || PublicPaths.Contains(path))
             {
                 await _next(context);
                 return;

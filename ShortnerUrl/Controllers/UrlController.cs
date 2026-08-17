@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ShortnerUrl.Dtos;
 using ShortnerUrl.Services;
 
@@ -18,6 +19,7 @@ namespace ShortnerUrl.Controllers
         }
 
         [HttpPost("shorten")]
+        [EnableRateLimiting("CreateRateLimit")]
         public async Task<IActionResult> Shorten([FromBody] CreateShortUrlRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Url))
@@ -68,6 +70,7 @@ namespace ShortnerUrl.Controllers
         }
 
         [HttpPost("shorten/bulk")]
+        [EnableRateLimiting("CreateRateLimit")]
         public async Task<IActionResult> BulkShorten([FromBody] BulkShortenRequest request)
         {
             if (request.Items == null || request.Items.Count == 0)

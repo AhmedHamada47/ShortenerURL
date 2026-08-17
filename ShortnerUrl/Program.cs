@@ -90,4 +90,15 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (System.IO.IOException ex) when (ex.InnerException is Microsoft.AspNetCore.Connections.AddressInUseException
+                                       || ex.InnerException is System.Net.Sockets.SocketException)
+{
+    // Log a clearer message and exit instead of letting the unhandled exception bubble up
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Failed to bind to configured address. It may already be in use. Stop the process using the port or change the application URL in Properties/launchSettings.json or set ASPNETCORE_URLS.");
+    Environment.Exit(1);
+}

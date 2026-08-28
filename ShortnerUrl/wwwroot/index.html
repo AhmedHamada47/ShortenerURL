@@ -61,6 +61,16 @@
     </div>
 
     <div class="card">
+      <h3 style="margin-bottom:16px"><i class="fas fa-qrcode"></i> QR Code Generator</h3>
+      <div class="input-group">
+        <label for="qrUrlInput">Link to encode</label>
+        <input type="url" id="qrUrlInput" placeholder="https://example.com" />
+        <div class="validation-feedback" id="qrUrlFeedback"></div>
+      </div>
+      <button class="btn btn-primary btn-full" id="qrGenerateBtn"><i class="fas fa-qrcode"></i> Generate QR Code</button>
+    </div>
+
+    <div class="card">
       <h3 style="margin-bottom:16px"><i class="fas fa-list"></i> Your Links</h3>
       <div class="empty-state" id="emptyState" style="display:none">
         <i class="fas fa-link"></i>

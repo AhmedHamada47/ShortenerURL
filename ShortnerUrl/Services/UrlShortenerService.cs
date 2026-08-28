@@ -199,6 +199,17 @@ namespace ShortnerUrl.Services
             return qrBytes;
         }
 
+        public byte[] GenerateQrCode(string url)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
+            using var pngQrCode = new PngByteQRCode(qrCodeData);
+            var qrBytes = pngQrCode.GetGraphic(20);
+
+            _logger.LogInformation("QR code generated for URL: {Url}", url);
+            return qrBytes;
+        }
+
         public async Task<List<BulkResult>> BulkShortenAsync(BulkShortenRequest request, string baseUrl)
         {
             var results = new List<BulkResult>();

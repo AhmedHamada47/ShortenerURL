@@ -11,6 +11,7 @@ namespace ShortnerUrl.Services
         Task<bool> DeleteAsync(string code);
         Task<UrlStatsResponse?> GetStatsAsync(string code);
         Task<byte[]?> GetQrCodeAsync(string code, string baseUrl);
+        byte[] GenerateQrCode(string url);
         Task<List<BulkResult>> BulkShortenAsync(BulkShortenRequest request, string baseUrl);
         Task<string> CreateApiKeyAsync(string workspaceName);
     }

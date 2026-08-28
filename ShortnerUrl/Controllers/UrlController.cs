@@ -69,6 +69,20 @@ namespace ShortnerUrl.Controllers
             return File(qrBytes, "image/png");
         }
 
+        [HttpPost("qr")]
+        public IActionResult GenerateQrCode([FromBody] QrCodeRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Url))
+                return BadRequest(new { error = "URL is required." });
+
+            var validation = UrlValidator.ValidateUrl(request.Url);
+            if (!validation.IsValid)
+                return BadRequest(new { error = validation.Error });
+
+            var qrBytes = _service.GenerateQrCode(request.Url);
+            return File(qrBytes, "image/png");
+        }
+
         [HttpPost("shorten/bulk")]
         [EnableRateLimiting("CreateRateLimit")]
         public async Task<IActionResult> BulkShorten([FromBody] BulkShortenRequest request)

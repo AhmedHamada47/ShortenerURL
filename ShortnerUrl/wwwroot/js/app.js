@@ -1,6 +1,7 @@
 const API_BASE = '/api';
 const THEME_COOKIE = 'theme';
 let state = { links: [], currentStats: null };
+let qrObjectUrl = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
@@ -66,6 +67,8 @@ function initEventListeners() {
   document.getElementById('advancedContent').querySelector('input').addEventListener('input', validateAliasInput);
   document.getElementById('copyResultBtn').addEventListener('click', () => copyText(document.getElementById('resultUrl').textContent));
   document.getElementById('qrResultBtn').addEventListener('click', showQrModal);
+  document.getElementById('qrGenerateBtn').addEventListener('click', generateQrCode);
+  document.getElementById('qrUrlInput').addEventListener('input', validateQrUrlInput);
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -172,6 +175,74 @@ function validateAliasInput() {
     input.className = 'input-invalid';
     feedback.textContent = '3-30 chars, letters/digits/hyphens only';
     feedback.className = 'validation-feedback invalid';
+  }
+}
+
+function validateQrUrlInput() {
+  const input = document.getElementById('qrUrlInput');
+  const feedback = document.getElementById('qrUrlFeedback');
+  const val = input.value.trim();
+
+  if (!val) {
+    input.className = '';
+    feedback.textContent = '';
+    feedback.className = 'validation-feedback';
+    return;
+  }
+
+  if (isValidUrl(val)) {
+    input.className = 'input-valid';
+    feedback.textContent = 'Valid URL';
+    feedback.className = 'validation-feedback valid';
+  } else {
+    input.className = 'input-invalid';
+    feedback.textContent = 'Enter a valid absolute http/https URL';
+    feedback.className = 'validation-feedback invalid';
+  }
+}
+
+async function generateQrCode() {
+  const input = document.getElementById('qrUrlInput');
+  const url = input.value.trim();
+
+  if (!url) return showToast('Please enter a URL.', 'error');
+  if (!isValidUrl(url)) return showToast('Please enter a valid http or https URL.', 'error');
+
+  const btn = document.getElementById('qrGenerateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
+
+  try {
+    const res = await fetch(`${API_BASE}/qr`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey() || '' },
+      body: JSON.stringify({ url })
+    });
+
+    if (res.status === 401) throw new Error('API key missing — refresh the page.');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.error || err.detail || 'Request failed');
+    }
+
+    const blob = await res.blob();
+    qrObjectUrl = URL.createObjectURL(blob);
+
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalTitle').textContent = 'QR Code';
+    document.getElementById('modalBody').innerHTML = `
+      <p style="color:var(--c-text-2);margin-bottom:12px;text-align:center;word-break:break-all">${escapeHtml(url)}</p>
+      <img src="${qrObjectUrl}" alt="QR Code" class="qr-img" />
+      <div style="text-align:center;margin-top:16px">
+        <a class="btn btn-sm btn-primary" href="${qrObjectUrl}" download="qr-code.png"><i class="fas fa-download"></i> Download PNG</a>
+      </div>
+    `;
+    overlay.classList.add('open');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-qrcode"></i> Generate QR Code';
   }
 }
 
@@ -333,6 +404,9 @@ function showQrFor(code) {
   document.getElementById('modalBody').innerHTML = `
     <p style="color:var(--c-text-2);margin-bottom:12px;text-align:center">Scan to visit: <strong>${escapeHtml(code)}</strong></p>
     <img src="${API_BASE}/urls/${encodeURIComponent(code)}/qr" alt="QR Code for ${escapeHtml(code)}" class="qr-img" />
+    <div style="text-align:center;margin-top:16px">
+      <a class="btn btn-sm btn-primary" href="${API_BASE}/urls/${encodeURIComponent(code)}/qr" download="qr-${encodeURIComponent(code)}.png"><i class="fas fa-download"></i> Download PNG</a>
+    </div>
   `;
   overlay.classList.add('open');
 }
@@ -365,6 +439,10 @@ function copyText(text) {
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
+  if (qrObjectUrl) {
+    URL.revokeObjectURL(qrObjectUrl);
+    qrObjectUrl = null;
+  }
 }
 
 function showToast(msg, type) {

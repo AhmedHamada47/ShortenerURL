@@ -27,7 +27,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "URL Shortener Pro API",
         Version = "v1",
-        Description = "A secure, feature-rich URL shortening service."
+        Description = "A secure, feature-rich URL shortening service       ."
     });
 });
 

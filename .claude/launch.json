@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shortener-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "ShortnerUrl"],
+      "port": 5122
+    }
+  ]
+}

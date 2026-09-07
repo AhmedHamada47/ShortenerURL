@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using ShortnerUrl.Data;
 using ShortnerUrl.Dtos;
+using ShortnerUrl.Exceptions;
 using ShortnerUrl.Models;
 
 namespace ShortnerUrl.Services
@@ -25,14 +27,14 @@ namespace ShortnerUrl.Services
             if (!validation.IsValid)
             {
                 _logger.LogWarning("URL validation failed: {Error}", validation.Error);
-                throw new ArgumentException(validation.Error);
+                throw new Exceptions.ValidationException(validation.Error!);
             }
 
             var aliasValidation = UrlValidator.ValidateCustomAlias(request.CustomAlias);
             if (!aliasValidation.IsValid)
             {
                 _logger.LogWarning("Custom alias validation failed: {Error}", aliasValidation.Error);
-                throw new ArgumentException(aliasValidation.Error);
+                throw new Exceptions.ValidationException(aliasValidation.Error!);
             }
 
             var existing = await _context.UrlShorteners.FirstOrDefaultAsync(x => x.LongUrl == request.Url);
@@ -49,8 +51,15 @@ namespace ShortnerUrl.Services
                 if (aliasExists)
                 {
                     _logger.LogWarning("Custom alias {Alias} is already taken", request.CustomAlias);
-                    throw new ArgumentException("This custom alias is already taken.");
+                    throw new ConflictException("This custom alias is already taken.");
                 }
+
+                if (existing != null)
+                {
+                    _logger.LogInformation("URL {Url} already shortened as {Code}, creating new alias {Alias}",
+                        request.Url, existing.ShortCode, request.CustomAlias);
+                }
+
                 code = request.CustomAlias;
             }
             else
@@ -69,7 +78,8 @@ namespace ShortnerUrl.Services
                 ShortCode = code,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = request.ExpiresAt,
-                CustomAlias = request.CustomAlias
+                CustomAlias = request.CustomAlias,
+                IsActive = true
             };
 
             _context.UrlShorteners.Add(mapping);
@@ -97,6 +107,12 @@ namespace ShortnerUrl.Services
                 return null;
             }
 
+            if (!url.IsActive)
+            {
+                _logger.LogInformation("Inactive link accessed: {Code}", code);
+                return "EXPIRED";
+            }
+
             if (url.ExpiresAt.HasValue && DateTime.UtcNow > url.ExpiresAt.Value)
             {
                 _logger.LogInformation("Expired link accessed: {Code}", code);
@@ -107,9 +123,9 @@ namespace ShortnerUrl.Services
             {
                 UrlShortenerId = url.Id,
                 ClickedAt = DateTime.UtcNow,
-                Referrer = referrer,
-                UserAgent = userAgent,
-                IpAddress = ipAddress
+                Referrer = Truncate(referrer, 2048),
+                UserAgent = Truncate(userAgent, 512),
+                IpHash = ipAddress != null ? HashIp(ipAddress) : null
             };
             _context.UrlClicks.Add(click);
 
@@ -121,9 +137,17 @@ namespace ShortnerUrl.Services
             return url.LongUrl;
         }
 
-        public async Task<List<ShortUrlResponse>> ListAllAsync(string baseUrl)
+        public async Task<List<ShortUrlResponse>> ListAllAsync(string baseUrl, int page = 1, int pageSize = 20)
         {
-            var urls = await _context.UrlShorteners.OrderByDescending(x => x.CreatedAt).ToListAsync();
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var urls = await _context.UrlShorteners
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
             return urls.Select(u => MapToResponse(u, baseUrl)).ToList();
         }
 
@@ -137,6 +161,35 @@ namespace ShortnerUrl.Services
 
             _logger.LogInformation("Deleted short URL: {Code}", code);
             return true;
+        }
+
+        public async Task<ShortUrlResponse?> UpdateUrlAsync(string code, UpdateUrlRequest request, string baseUrl)
+        {
+            var url = await _context.UrlShorteners.FirstOrDefaultAsync(x => x.ShortCode == code);
+            if (url == null) return null;
+
+            if (!string.IsNullOrWhiteSpace(request.Url))
+            {
+                var validation = UrlValidator.ValidateUrl(request.Url);
+                if (!validation.IsValid)
+                    throw new Exceptions.ValidationException(validation.Error!);
+                url.LongUrl = request.Url;
+            }
+
+            if (request.ExpiresAt.HasValue)
+            {
+                var exp = request.ExpiresAt.Value;
+                if (exp.Kind == DateTimeKind.Unspecified)
+                    exp = DateTime.SpecifyKind(exp, DateTimeKind.Utc);
+                url.ExpiresAt = exp;
+            }
+
+            if (request.IsActive.HasValue)
+                url.IsActive = request.IsActive.Value;
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Updated short URL: {Code}", code);
+            return MapToResponse(url, baseUrl);
         }
 
         public async Task<UrlStatsResponse?> GetStatsAsync(string code)
@@ -169,6 +222,18 @@ namespace ShortnerUrl.Services
                 .Take(10)
                 .ToList();
 
+            var topBrowsers = url.UrlClicks
+                .Where(c => !string.IsNullOrWhiteSpace(c.UserAgent))
+                .GroupBy(c => ParseBrowser(c.UserAgent!))
+                .Select(g => new BrowserEntry
+                {
+                    Browser = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(b => b.Count)
+                .Take(10)
+                .ToList();
+
             return new UrlStatsResponse
             {
                 Id = url.Id,
@@ -178,8 +243,10 @@ namespace ShortnerUrl.Services
                 CreatedAt = url.CreatedAt,
                 ExpiresAt = url.ExpiresAt,
                 IsExpired = url.ExpiresAt.HasValue && DateTime.UtcNow > url.ExpiresAt.Value,
+                IsActive = url.IsActive,
                 ClicksOverTime = clicksOverTime,
-                TopReferrers = topReferrers
+                TopReferrers = topReferrers,
+                TopBrowsers = topBrowsers
             };
         }
 
@@ -189,25 +256,19 @@ namespace ShortnerUrl.Services
             if (url == null) return null;
 
             var shortUrl = $"{baseUrl.TrimEnd('/')}/{code}";
-
-            using var qrGenerator = new QRCodeGenerator();
-            using var qrCodeData = qrGenerator.CreateQrCode(shortUrl, QRCodeGenerator.ECCLevel.Q);
-            using var pngQrCode = new PngByteQRCode(qrCodeData);
-            var qrBytes = pngQrCode.GetGraphic(20);
-
-            _logger.LogInformation("QR code generated for {Code}", code);
-            return qrBytes;
+            return GenerateQrCode(shortUrl);
         }
 
-        public byte[] GenerateQrCode(string url)
+        public byte[] GenerateQrCode(string url, int size = 10, string? foregroundHex = null, string? backgroundHex = null)
         {
+            size = Math.Clamp(size, 5, 30);
+            var fg = ParseColor(foregroundHex, new byte[] { 0, 0, 0 });
+            var bg = ParseColor(backgroundHex, new byte[] { 255, 255, 255 });
+
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
             using var pngQrCode = new PngByteQRCode(qrCodeData);
-            var qrBytes = pngQrCode.GetGraphic(20);
-
-            _logger.LogInformation("QR code generated for URL: {Url}", url);
-            return qrBytes;
+            return pngQrCode.GetGraphic(size, fg, bg);
         }
 
         public async Task<List<BulkResult>> BulkShortenAsync(BulkShortenRequest request, string baseUrl)
@@ -231,7 +292,16 @@ namespace ShortnerUrl.Services
                         ShortUrl = response.ShortUrl
                     });
                 }
-                catch (ArgumentException ex)
+                catch (Exceptions.ValidationException ex)
+                {
+                    results.Add(new BulkResult
+                    {
+                        OriginalUrl = item.Url,
+                        Success = false,
+                        Error = ex.Message
+                    });
+                }
+                catch (ConflictException ex)
                 {
                     results.Add(new BulkResult
                     {
@@ -293,7 +363,7 @@ namespace ShortnerUrl.Services
             }
 
             _logger.LogError("Failed to generate unique code after {MaxRetries} attempts", MaxCollisionRetries);
-            throw new InvalidOperationException("Unable to generate a unique short code. Please try again.");
+            throw new ConflictException("Unable to generate a unique short code. Please try again.");
         }
 
         private static string GenerateApiKey()
@@ -311,6 +381,42 @@ namespace ShortnerUrl.Services
             return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
+        private static string HashIp(string ip)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(ip);
+            var hash = SHA256.HashData(bytes);
+            return Convert.ToHexString(hash).ToLowerInvariant()[..16];
+        }
+
+        private static string? Truncate(string? value, int maxLength)
+        {
+            if (value == null) return null;
+            return value.Length <= maxLength ? value : value[..maxLength];
+        }
+
+        private static string ParseBrowser(string userAgent)
+        {
+            if (userAgent.Contains("Edg/", StringComparison.OrdinalIgnoreCase)) return "Edge";
+            if (userAgent.Contains("OPR/", StringComparison.OrdinalIgnoreCase) || userAgent.Contains("Opera", StringComparison.OrdinalIgnoreCase)) return "Opera";
+            if (userAgent.Contains("Chrome/", StringComparison.OrdinalIgnoreCase)) return "Chrome";
+            if (userAgent.Contains("Safari/", StringComparison.OrdinalIgnoreCase) && !userAgent.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) return "Safari";
+            if (userAgent.Contains("Firefox/", StringComparison.OrdinalIgnoreCase)) return "Firefox";
+            return "Other";
+        }
+
+        private static byte[] ParseColor(string? hex, byte[] fallback)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return fallback;
+            hex = hex.TrimStart('#');
+            if (hex.Length != 6 || !Regex.IsMatch(hex, "^[0-9a-fA-F]{6}$")) return fallback;
+            return new[]
+            {
+                Convert.ToByte(hex[..2], 16),
+                Convert.ToByte(hex[2..4], 16),
+                Convert.ToByte(hex[4..6], 16)
+            };
+        }
+
         private static ShortUrlResponse MapToResponse(UrlShortener entity, string? baseUrl)
         {
             return new ShortUrlResponse
@@ -322,7 +428,8 @@ namespace ShortnerUrl.Services
                 CreatedAt = entity.CreatedAt,
                 Clicks = entity.Clicks,
                 ExpiresAt = entity.ExpiresAt,
-                CustomAlias = entity.CustomAlias
+                CustomAlias = entity.CustomAlias,
+                IsActive = entity.IsActive
             };
         }
     }

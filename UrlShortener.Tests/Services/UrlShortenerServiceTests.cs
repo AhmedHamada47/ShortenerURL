@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using ShortnerUrl.Data;
 using ShortnerUrl.Dtos;
+using ShortnerUrl.Exceptions;
 using ShortnerUrl.Services;
 
 namespace UrlShortener.Tests.Services;
@@ -39,6 +40,7 @@ public class UrlShortenerServiceTests
         result.ShortUrl.Should().Be($"http://localhost:5000/{result.ShortCode}");
         result.LongUrl.Should().Be("https://example.com/very-long-path");
         result.Clicks.Should().Be(0);
+        result.IsActive.Should().BeTrue();
     }
 
     [Fact]
@@ -49,7 +51,7 @@ public class UrlShortenerServiceTests
         var request = new CreateShortUrlRequest { Url = "not-a-url" };
 
         await FluentActions.Awaiting(() => svc.CreateShortUrlAsync(request, "http://localhost:5000"))
-            .Should().ThrowAsync<ArgumentException>()
+            .Should().ThrowAsync<ValidationException>()
             .WithMessage("URL must be an absolute URI*");
     }
 
@@ -72,7 +74,7 @@ public class UrlShortenerServiceTests
         {
             var request = new CreateShortUrlRequest { Url = url };
             await FluentActions.Awaiting(() => svc.CreateShortUrlAsync(request, "http://localhost:5000"))
-                .Should().ThrowAsync<ArgumentException>()
+                .Should().ThrowAsync<ValidationException>()
                 .WithMessage("*private*");
         }
     }
@@ -109,7 +111,7 @@ public class UrlShortenerServiceTests
                 CustomAlias = alias
             };
             await FluentActions.Awaiting(() => svc.CreateShortUrlAsync(request, "http://localhost:5000"))
-                .Should().ThrowAsync<ArgumentException>()
+                .Should().ThrowAsync<ValidationException>()
                 .WithMessage("*reserved*");
         }
     }
@@ -124,7 +126,7 @@ public class UrlShortenerServiceTests
 
         await svc.CreateShortUrlAsync(r1, "http://localhost:5000");
         await FluentActions.Awaiting(() => svc.CreateShortUrlAsync(r2, "http://localhost:5000"))
-            .Should().ThrowAsync<ArgumentException>()
+            .Should().ThrowAsync<ConflictException>()
             .WithMessage("*already taken*");
     }
 
@@ -161,12 +163,36 @@ public class UrlShortenerServiceTests
     {
         using var ctx = CreateDbContext();
         var svc = CreateService(ctx);
+        // Create with a future date, then manually set it to the past to simulate expiration
         var request = new CreateShortUrlRequest
         {
             Url = "https://example.com",
-            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
         var created = await svc.CreateShortUrlAsync(request, "http://localhost:5000");
+
+        // Manually expire the link
+        var entity = await ctx.UrlShorteners.FirstAsync(x => x.ShortCode == created.ShortCode);
+        entity.ExpiresAt = DateTime.UtcNow.AddDays(-1);
+        await ctx.SaveChangesAsync();
+
+        var result = await svc.RedirectAsync(created.ShortCode, null, null, null);
+
+        result.Should().Be("EXPIRED");
+    }
+
+    [Fact]
+    public async Task RedirectAsync_InactiveLink_ReturnsExpired()
+    {
+        using var ctx = CreateDbContext();
+        var svc = CreateService(ctx);
+        var request = new CreateShortUrlRequest { Url = "https://example.com" };
+        var created = await svc.CreateShortUrlAsync(request, "http://localhost:5000");
+
+        // Deactivate the link
+        var entity = await ctx.UrlShorteners.FirstAsync(x => x.ShortCode == created.ShortCode);
+        entity.IsActive = false;
+        await ctx.SaveChangesAsync();
 
         var result = await svc.RedirectAsync(created.ShortCode, null, null, null);
 
@@ -217,6 +243,7 @@ public class UrlShortenerServiceTests
         stats.TopReferrers[0].Count.Should().Be(2);
         stats.TopReferrers[0].Referrer.Should().Be("https://referrer.com");
         stats.ClicksOverTime.Should().HaveCount(1);
+        stats.IsActive.Should().BeTrue();
     }
 
     [Fact]
@@ -286,6 +313,18 @@ public class UrlShortenerServiceTests
     }
 
     [Fact]
+    public async Task GenerateQrCode_WithCustomColors_ReturnsBytes()
+    {
+        using var ctx = CreateDbContext();
+        var svc = CreateService(ctx);
+
+        var qrBytes = svc.GenerateQrCode("https://example.com", 15, "#FF0000", "#FFFFFF");
+
+        qrBytes.Should().NotBeNull();
+        qrBytes.Length.Should().BeGreaterThan(100);
+    }
+
+    [Fact]
     public async Task CreateShortUrlAsync_ReturnsExistingForSameUrl()
     {
         using var ctx = CreateDbContext();
@@ -310,5 +349,50 @@ public class UrlShortenerServiceTests
 
         list.Should().HaveCount(2);
         list[0].LongUrl.Should().Be("https://example.com/b");
+    }
+
+    [Fact]
+    public async Task UpdateUrlAsync_ChangesDestination()
+    {
+        using var ctx = CreateDbContext();
+        var svc = CreateService(ctx);
+        var created = await svc.CreateShortUrlAsync(
+            new CreateShortUrlRequest { Url = "https://example.com/old" }, "http://localhost:5000");
+
+        var updated = await svc.UpdateUrlAsync(created.ShortCode,
+            new UpdateUrlRequest { Url = "https://example.com/new" }, "http://localhost:5000");
+
+        updated.Should().NotBeNull();
+        updated!.LongUrl.Should().Be("https://example.com/new");
+    }
+
+    [Fact]
+    public async Task UpdateUrlAsync_Deactivate()
+    {
+        using var ctx = CreateDbContext();
+        var svc = CreateService(ctx);
+        var created = await svc.CreateShortUrlAsync(
+            new CreateShortUrlRequest { Url = "https://example.com" }, "http://localhost:5000");
+
+        var updated = await svc.UpdateUrlAsync(created.ShortCode,
+            new UpdateUrlRequest { IsActive = false }, "http://localhost:5000");
+
+        updated.Should().NotBeNull();
+        updated!.IsActive.Should().BeFalse();
+
+        var redirect = await svc.RedirectAsync(created.ShortCode, null, null, null);
+        redirect.Should().Be("EXPIRED");
+    }
+
+    [Fact]
+    public async Task UpdateUrlAsync_NonExistent_ReturnsNull()
+    {
+        using var ctx = CreateDbContext();
+        var svc = CreateService(ctx);
+
+        var result = await svc.UpdateUrlAsync("nonexist",
+            new UpdateUrlRequest { Url = "https://example.com" }, "http://localhost:5000");
+
+        result.Should().BeNull();
     }
 }

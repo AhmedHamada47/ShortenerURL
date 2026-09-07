@@ -14,6 +14,7 @@
 <body>
   <div class="container">
     <header>
+      <div class="aurora"></div>
       <div class="logo">
         <div class="logo-icon"><i class="fas fa-link"></i></div>
         <div>
@@ -66,6 +67,16 @@
         <label for="qrUrlInput">Link to encode</label>
         <input type="url" id="qrUrlInput" placeholder="https://example.com" />
         <div class="validation-feedback" id="qrUrlFeedback"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div class="input-group" style="flex:1;margin-bottom:0">
+          <label for="qrFgColor">Foreground</label>
+          <input type="color" id="qrFgColor" value="#000000" />
+        </div>
+        <div class="input-group" style="flex:1;margin-bottom:0">
+          <label for="qrBgColor">Background</label>
+          <input type="color" id="qrBgColor" value="#FFFFFF" />
+        </div>
       </div>
       <button class="btn btn-primary btn-full" id="qrGenerateBtn"><i class="fas fa-qrcode"></i> Generate QR Code</button>
     </div>

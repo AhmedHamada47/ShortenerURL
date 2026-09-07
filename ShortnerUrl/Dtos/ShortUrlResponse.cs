@@ -10,6 +10,7 @@ namespace ShortnerUrl.Dtos
         public int Clicks { get; set; }
         public DateTime? ExpiresAt { get; set; }
         public string? CustomAlias { get; set; }
+        public bool IsActive { get; set; }
         public bool IsExpired => ExpiresAt.HasValue && DateTime.UtcNow > ExpiresAt.Value;
     }
 }

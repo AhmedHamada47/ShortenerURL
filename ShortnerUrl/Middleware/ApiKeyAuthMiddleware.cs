@@ -46,13 +46,21 @@ namespace ShortnerUrl.Middleware
                 }
 
                 var hash = UrlShortenerService.HashKey(extractedApiKey!);
-                var keyExists = await dbContext.ApiKeys.AnyAsync(k => k.KeyHash == hash && k.IsActive);
+                var key = await dbContext.ApiKeys.FirstOrDefaultAsync(k => k.KeyHash == hash && k.IsActive);
 
-                if (!keyExists)
+                if (key == null)
                 {
                     context.Response.StatusCode = 401;
                     context.Response.ContentType = "application/json";
                     await context.Response.WriteAsync("{\"error\":\"Invalid or inactive API key.\"}");
+                    return;
+                }
+
+                if (key.ExpiresAt.HasValue && DateTime.UtcNow > key.ExpiresAt.Value)
+                {
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{\"error\":\"API key has expired.\"}");
                     return;
                 }
             }

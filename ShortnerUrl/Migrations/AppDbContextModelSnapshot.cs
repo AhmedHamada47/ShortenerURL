@@ -26,6 +26,9 @@ namespace ShortnerUrl.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -35,6 +38,7 @@ namespace ShortnerUrl.Migrations
 
                     b.Property<string>("WorkspaceName")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -54,16 +58,19 @@ namespace ShortnerUrl.Migrations
                     b.Property<DateTime>("ClickedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("IpAddress")
+                    b.Property<string>("IpHash")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Referrer")
+                        .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UrlShortenerId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -86,20 +93,28 @@ namespace ShortnerUrl.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CustomAlias")
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LongUrl")
                         .IsRequired()
+                        .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ShortCode")
                         .IsRequired()
+                        .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LongUrl");
 
                     b.HasIndex("ShortCode")
                         .IsUnique();

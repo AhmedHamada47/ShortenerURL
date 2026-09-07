@@ -12,11 +12,14 @@ namespace ShortnerUrl.Models
 
         public DateTime ClickedAt { get; set; } = DateTime.UtcNow;
 
+        [MaxLength(2048)]
         public string? Referrer { get; set; }
 
+        [MaxLength(512)]
         public string? UserAgent { get; set; }
 
-        public string? IpAddress { get; set; }
+        [MaxLength(64)]
+        public string? IpHash { get; set; }
 
         [ForeignKey(nameof(UrlShortenerId))]
         public UrlShortener UrlShortener { get; set; } = null!;

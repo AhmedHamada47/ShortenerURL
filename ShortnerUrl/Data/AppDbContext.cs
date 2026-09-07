@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ShortnerUrl.Models;
 
 namespace ShortnerUrl.Data
@@ -17,6 +17,7 @@ namespace ShortnerUrl.Data
             {
                 entity.ToTable("UrlShorteners");
                 entity.HasIndex(e => e.ShortCode).IsUnique();
+                entity.HasIndex(e => e.LongUrl);
                 entity.HasMany(e => e.UrlClicks)
                       .WithOne(e => e.UrlShortener)
                       .HasForeignKey(e => e.UrlShortenerId)
@@ -26,6 +27,7 @@ namespace ShortnerUrl.Data
             modelBuilder.Entity<UrlClick>(entity =>
             {
                 entity.ToTable("UrlClicks");
+                entity.HasIndex(e => e.UrlShortenerId);
             });
 
             modelBuilder.Entity<ApiKey>(entity =>

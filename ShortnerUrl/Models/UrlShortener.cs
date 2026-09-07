@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ShortnerUrl.Models
 {
@@ -8,9 +8,11 @@ namespace ShortnerUrl.Models
         public int Id { get; set; }
 
         [Required]
+        [MaxLength(2048)]
         public string LongUrl { get; set; } = string.Empty;
 
         [Required]
+        [MaxLength(30)]
         public string ShortCode { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -19,7 +21,10 @@ namespace ShortnerUrl.Models
 
         public DateTime? ExpiresAt { get; set; }
 
+        [MaxLength(30)]
         public string? CustomAlias { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         public ICollection<UrlClick> UrlClicks { get; set; } = new List<UrlClick>();
     }

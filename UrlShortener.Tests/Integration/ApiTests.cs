@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ShortnerUrl.Data;
@@ -141,15 +140,35 @@ public class ApiTests : IClassFixture<WebApplicationFactory<ShortnerUrl.WebEntry
     {
         var client = CreateClient();
 
+        // Create a valid link first
         var createRes = await client.PostAsJsonAsync("/api/shorten", new CreateShortUrlRequest
         {
-            Url = "https://example.com/expired",
-            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+            Url = "https://example.com/will-expire"
         });
         var created = await createRes.Content.ReadFromJsonAsync<ShortUrlResponse>();
 
-        var redirectRes = await client.GetAsync($"/{created!.ShortCode}");
+        // Manually expire the link via the update endpoint
+        var updateRes = await client.PutAsJsonAsync($"/api/urls/{created!.ShortCode}", new UpdateUrlRequest
+        {
+            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+        });
+        updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var redirectRes = await client.GetAsync($"/{created.ShortCode}");
         redirectRes.StatusCode.Should().Be(HttpStatusCode.Gone);
+    }
+
+    [Fact]
+    public async Task Shorten_PastExpiresAt_ReturnsBadRequest()
+    {
+        var client = CreateClient();
+
+        var res = await client.PostAsJsonAsync("/api/shorten", new CreateShortUrlRequest
+        {
+            Url = "https://example.com/past-expiry",
+            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+        });
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -281,5 +300,66 @@ public class ApiTests : IClassFixture<WebApplicationFactory<ShortnerUrl.WebEntry
         var redirectRes = await client.GetAsync($"/{created!.ShortCode}");
         redirectRes.StatusCode.Should().Be(HttpStatusCode.Redirect);
         redirectRes.Headers.Location!.Host.Should().Be("example.com");
+    }
+
+    [Fact]
+    public async Task UpdateUrl_ChangesDestination()
+    {
+        var client = CreateClient();
+
+        var createRes = await client.PostAsJsonAsync("/api/shorten", new CreateShortUrlRequest
+        {
+            Url = "https://example.com/original"
+        });
+        var created = await createRes.Content.ReadFromJsonAsync<ShortUrlResponse>();
+
+        var updateRes = await client.PutAsJsonAsync($"/api/urls/{created!.ShortCode}", new UpdateUrlRequest
+        {
+            Url = "https://example.com/updated"
+        });
+        updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updated = await updateRes.Content.ReadFromJsonAsync<ShortUrlResponse>();
+        updated!.LongUrl.Should().Be("https://example.com/updated");
+    }
+
+    [Fact]
+    public async Task UpdateUrl_Deactivate_Returns410OnRedirect()
+    {
+        var client = CreateClient();
+
+        var createRes = await client.PostAsJsonAsync("/api/shorten", new CreateShortUrlRequest
+        {
+            Url = "https://example.com/deactivate-me"
+        });
+        var created = await createRes.Content.ReadFromJsonAsync<ShortUrlResponse>();
+
+        await client.PutAsJsonAsync($"/api/urls/{created!.ShortCode}", new UpdateUrlRequest
+        {
+            IsActive = false
+        });
+
+        var redirectRes = await client.GetAsync($"/{created.ShortCode}");
+        redirectRes.StatusCode.Should().Be(HttpStatusCode.Gone);
+    }
+
+    [Fact]
+    public async Task BulkShorten_ExceedsLimit_ReturnsBadRequest()
+    {
+        var client = CreateClient();
+
+        var items = Enumerable.Range(1, 101)
+            .Select(i => new BulkItem { Url = $"https://example.com/{i}" })
+            .ToList();
+
+        var res = await client.PostAsJsonAsync("/api/shorten/bulk", new BulkShortenRequest { Items = items });
+        res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Health_ReturnsOk()
+    {
+        var client = _factory.CreateClient();
+        var res = await client.GetAsync("/api/health");
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

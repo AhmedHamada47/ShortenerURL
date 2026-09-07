@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ShortnerUrl.Dtos;
 using ShortnerUrl.Services;
@@ -31,12 +31,16 @@ namespace ShortnerUrl.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> ListUrls()
+        [EnableRateLimiting("ReadRateLimit")]
+        public async Task<IActionResult> ListUrls([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var urls = await _service.ListAllAsync(baseUrl);
+            var urls = await _service.ListAllAsync(baseUrl, page, pageSize);
             return Ok(urls);
         }
+
+        [HttpGet("health")]
+        public IActionResult Health() => Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
 
         [HttpDelete("{code}")]
         public async Task<IActionResult> Delete(string code)
@@ -48,7 +52,20 @@ namespace ShortnerUrl.Controllers
             return NoContent();
         }
 
+        [HttpPut("urls/{code}")]
+        public async Task<IActionResult> UpdateUrl(string code, [FromBody] UpdateUrlRequest request)
+        {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await _service.UpdateUrlAsync(code, request, baseUrl);
+            if (result == null)
+                return NotFound(new { error = "Short URL not found." });
+
+            return Ok(result);
+        }
+
         [HttpGet("urls/{code}/stats")]
+        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Client)]
+        [EnableRateLimiting("ReadRateLimit")]
         public async Task<IActionResult> GetStats(string code)
         {
             var stats = await _service.GetStatsAsync(code);
@@ -59,6 +76,7 @@ namespace ShortnerUrl.Controllers
         }
 
         [HttpGet("urls/{code}/qr")]
+        [EnableRateLimiting("ReadRateLimit")]
         public async Task<IActionResult> GetQrCode(string code)
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
@@ -66,10 +84,12 @@ namespace ShortnerUrl.Controllers
             if (qrBytes == null)
                 return NotFound(new { error = "Short URL not found." });
 
+            Response.Headers["Cache-Control"] = "public, max-age=86400";
             return File(qrBytes, "image/png");
         }
 
         [HttpPost("qr")]
+        [EnableRateLimiting("CreateRateLimit")]
         public IActionResult GenerateQrCode([FromBody] QrCodeRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Url))
@@ -79,7 +99,7 @@ namespace ShortnerUrl.Controllers
             if (!validation.IsValid)
                 return BadRequest(new { error = validation.Error });
 
-            var qrBytes = _service.GenerateQrCode(request.Url);
+            var qrBytes = _service.GenerateQrCode(request.Url, request.Size, request.ForegroundColor, request.BackgroundColor);
             return File(qrBytes, "image/png");
         }
 
@@ -89,6 +109,9 @@ namespace ShortnerUrl.Controllers
         {
             if (request.Items == null || request.Items.Count == 0)
                 return BadRequest(new { error = "At least one URL is required." });
+
+            if (request.Items.Count > 100)
+                return BadRequest(new { error = "Bulk requests are limited to 100 URLs." });
 
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var results = await _service.BulkShortenAsync(request, baseUrl);

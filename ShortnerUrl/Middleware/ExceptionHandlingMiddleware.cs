@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using ShortnerUrl.Exceptions;
 
 namespace ShortnerUrl.Middleware
 {
@@ -20,26 +21,29 @@ namespace ShortnerUrl.Middleware
             {
                 await _next(context);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (!context.Response.HasStarted)
             {
-                _logger.LogWarning("Validation error: {Message}", ex.Message);
+                var (statusCode, title) = ex switch
+                {
+                    Exceptions.ValidationException => ((int)HttpStatusCode.BadRequest, "Validation Error"),
+                    ConflictException => ((int)HttpStatusCode.Conflict, "Conflict"),
+                    NotFoundException => ((int)HttpStatusCode.NotFound, "Not Found"),
+                    // Keep backward compatibility for ArgumentException thrown from FluentValidation or other sources
+                    ArgumentException => ((int)HttpStatusCode.BadRequest, "Validation Error"),
+                    InvalidOperationException => ((int)HttpStatusCode.Conflict, "Operation Error"),
+                    _ => ((int)HttpStatusCode.InternalServerError, "Internal Server Error")
+                };
+
+                var detail = statusCode == 500 ? "An unexpected error occurred." : ex.Message;
+
+                if (statusCode >= 500)
+                    _logger.LogError(ex, "Unhandled exception");
+                else
+                    _logger.LogWarning("Request error ({StatusCode}): {Message}", statusCode, ex.Message);
+
                 context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await WriteErrorResponse(context, "Validation Error", ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Operation error: {Message}", ex.Message);
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-                await WriteErrorResponse(context, "Operation Error", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unhandled exception");
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await WriteErrorResponse(context, "Internal Server Error", "An unexpected error occurred.");
+                context.Response.StatusCode = statusCode;
+                await WriteErrorResponse(context, title, detail);
             }
         }
 
@@ -51,7 +55,8 @@ namespace ShortnerUrl.Middleware
                 Title = title,
                 Status = context.Response.StatusCode,
                 Detail = detail,
-                Instance = context.Request.Path
+                Instance = context.Request.Path,
+                TraceId = context.TraceIdentifier
             };
             var json = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(json);

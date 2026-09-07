@@ -47,7 +47,7 @@ namespace ShortnerUrl.Services
             if (uri.Scheme != "http" && uri.Scheme != "https")
                 return (false, "Only http and https schemes are allowed.");
 
-            if (IsPrivateIp(uri))
+            if (IsPrivateHost(uri))
                 return (false, "URL points to a private or loopback address, which is not allowed.");
 
             return (true, null);
@@ -70,38 +70,69 @@ namespace ShortnerUrl.Services
             return (true, null);
         }
 
-        private static bool IsPrivateIp(Uri uri)
+        private static bool IsPrivateHost(Uri uri)
         {
             try
             {
                 var host = uri.DnsSafeHost;
 
-                if (host == "localhost" || host == "127.0.0.1")
+                if (host == "localhost")
                     return true;
 
-                if (IPAddress.TryParse(host, out var addr))
-                {
-                    if (IPAddress.IsLoopback(addr))
-                        return true;
+                if (IPAddress.TryParse(host, out var parsedAddr))
+                    return IsPrivateAddress(parsedAddr);
 
-                    var bytes = addr.GetAddressBytes();
-                    if (bytes.Length == 4)
+                // Resolve DNS to catch rebinding attacks (e.g. localtest.me -> 127.0.0.1)
+                try
+                {
+                    var addresses = Dns.GetHostAddresses(host);
+                    foreach (var addr in addresses)
                     {
-                        var ipInt = ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
-                        for (int i = 0; i < PrivateIpPrefixes.Length; i++)
-                        {
-                            if ((ipInt & PrivateIpMasks[i]) == PrivateIpPrefixes[i])
-                                return true;
-                        }
+                        if (IsPrivateAddress(addr))
+                            return true;
                     }
+                }
+                catch
+                {
+                    // DNS resolution failed — treat as private (fail-closed)
+                    return true;
                 }
 
                 return false;
             }
             catch
             {
-                return false;
+                // Parsing error — assume private for safety
+                return true;
             }
+        }
+
+        private static bool IsPrivateAddress(IPAddress addr)
+        {
+            if (IPAddress.IsLoopback(addr))
+                return true;
+
+            var bytes = addr.GetAddressBytes();
+
+            if (bytes.Length == 4)
+            {
+                var ipInt = ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
+                for (int i = 0; i < PrivateIpPrefixes.Length; i++)
+                {
+                    if ((ipInt & PrivateIpMasks[i]) == PrivateIpPrefixes[i])
+                        return true;
+                }
+            }
+            else if (bytes.Length == 16)
+            {
+                // IPv6 private ranges: ::1 (loopback already caught), fe80::/10 (link-local), fc00::/7 (ULA)
+                if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80)
+                    return true;
+                if ((bytes[0] & 0xfe) == 0xfc)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

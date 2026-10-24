@@ -21,6 +21,8 @@ namespace ShortnerUrl.Models
         [MaxLength(64)]
         public string? IpHash { get; set; }
 
+        public string? Country { get; set; }
+
         [ForeignKey(nameof(UrlShortenerId))]
         public UrlShortener UrlShortener { get; set; } = null!;
     }
